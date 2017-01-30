@@ -1,0 +1,15 @@
+USB Setup Packet
+
+Field Name	Length (bytes)
+
+bmRequestType	1
+bRequest	1
+wValve		2
+wIndex		2
+wLength		2
+-----------------------
+Total		8
+
+bm -- bitmap
+b -- byte
+w -- word
