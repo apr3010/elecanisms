@@ -21,6 +21,8 @@ env.Program('blinkusb', ['blinkusb.c',
                          '../lib/pin.c', 
                          '../lib/uart.c',
 			 '../lib/oc.c',
-			 '../lib/ui.c'])
+			 '../lib/ui.c',
+			 '../lib/timer.c',
+			 '../lib/spi.c'])
 env.Hex('blinkusb')
 env.List('blinkusb')

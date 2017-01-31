@@ -6,6 +6,7 @@
 #include "ui.h"
 #include "oc.h"
 #include "timer.h"
+#include "spi.h"
 
 #define TOGGLE_LED1 0   // Changes state of LED
 #define SET_DUTY    1   // What % of cycle is high
@@ -13,16 +14,14 @@
 #define MOTOR_ON    3   //
 #define MOTOR_OFF   4
 #define MOTOR_REV   5
+#define ANG_READ    6
 
 _PIN*nCS1;
 _PIN*nCS2;
 _PIN*MOSI;
 _PIN*MISO;
+_PIN*SCK;
 
-MOSI = &D[0];
-MISO = &D[1];
-nCS1 = &D[3];
-nCS2 = &D[4];
 // uint16_t oc1;
 
 //void ClassRequests(void) {
@@ -31,6 +30,24 @@ nCS2 = &D[4];
 //            USB_error_flags |= 0x01;                    // set Request Error Flag
 //    }
 //}
+
+WORD enc_readReg(uint16_t address) {
+    // led_toggle(&led1);
+    WORD cmd, result;
+    cmd.w = 0x4000|address; //set 2nd MSB to 1 for a read
+    cmd.w |= parity(cmd.w)<<15; //calculate even parity for
+
+    pin_clear(nCS1);
+    spi_transfer(&spi1, cmd.b[1]);
+    spi_transfer(&spi1, cmd.b[0]);
+    pin_set(nCS1);
+
+    pin_clear(nCS1);
+    result.b[1] = spi_transfer(&spi1, 0);
+    result.b[0] = spi_transfer(&spi1, 0);
+    pin_set(nCS1);
+    return result;
+}
 
 void VendorRequests(void) {
     WORD temp, angle;
@@ -54,11 +71,13 @@ void VendorRequests(void) {
         //     BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
         //     BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         //     break;
-        case ANG_SENSE:
-            pin_clear(nCS1);
-            angle.b[1] = spi.transfer(&spi1, 0);
-            angle.b[0] = spi.transfer(&spi2, 0);
-            pin_set(nCS1);
+        case ANG_READ:
+            angle = enc_readReg(0x3FFF);
+            led_toggle(&led1);
+            BD[EP0IN].address[0] = angle.b[0];
+            BD[EP0IN].address[1] = angle.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2 
+            BD[EP0IN].status = 0xC8;  
             break;    
         case MOTOR_REV:
             pin_write(&D[5],0x0000);
@@ -102,11 +121,22 @@ int16_t main(void) {
     init_ui();
     init_pin();
     init_oc();
+    init_spi();
 
+    MOSI = &D[0];
+    MISO = &D[1];
+    SCK = &D[2];
+    nCS1 = &D[3];
+
+    pin_digitalOut(nCS1);
+    // pin_set(nCS1);
+    // nCS2 = &D[4];
     // oc_pwm(&oc1, &D[13], NULL, 10e3, 0x8000);
     oc_pwm(&oc1, &D[5], NULL, 10e3, 0x8000);
     oc_pwm(&oc2, &D[6], NULL, 10e3, 0x8000);
-
+    // spi_open(&spi1, ENC_MISO, ENC_MOSI, ENC_SCK, 2e6, 1);
+    spi_open(&spi1, MISO, MOSI, SCK, 2e6, 1);
+    
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests

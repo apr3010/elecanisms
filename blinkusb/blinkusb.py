@@ -1,5 +1,6 @@
 
 import usb.core
+import time
 
 class blinkusb:
 
@@ -10,6 +11,7 @@ class blinkusb:
         self.MOTOR_ON = 3
         self.MOTOR_OFF = 4
         self.MOTOR_REV = 5
+        self.ANG_READ = 6
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
@@ -55,3 +57,24 @@ class blinkusb:
             self.dev.ctrl_transfer(0x40, self.MOTOR_REV)
         except usb.core.USBError:
             print "Could not send MOTOR_REV vendor request."
+
+    def ang_read(self):
+        try:
+            ret = self.dev.ctrl_transfer(0xC0, self.ANG_READ, 0, 0, 2)
+        except usb.core.USBError:
+            print "Could not send ANG_READ vendor request."
+        else:
+            return int(ret[0])+int(ret[1])*256
+
+if __name__ == '__main__':
+    action = blinkusb()
+    action.motor_on()
+    action.set_duty(0x4000)
+    time.sleep(5)
+    print "turning off"
+    action.motor_off()
+    result = []
+    for t in range(0,1000):
+        time.sleep(0.01)
+        result.append(action.ang_read())
+        print result
