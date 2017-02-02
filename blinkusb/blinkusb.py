@@ -75,6 +75,6 @@ if __name__ == '__main__':
     action.motor_off()
     result = []
     for t in range(0,1000):
-        time.sleep(0.01)
+        time.sleep(0.001)
         result.append(action.ang_read())
-        print result
+    print result
