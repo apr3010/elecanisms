@@ -71,7 +71,7 @@ if __name__ == '__main__':
     action.motor_on()
     action.set_duty(0x4000)
     time.sleep(5)
-    print "turning off"
+    print "turning off" 
     action.motor_off()
     result = []
     for t in range(0,1000):

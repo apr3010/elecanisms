@@ -38,13 +38,13 @@ WORD enc_readReg(uint16_t address) {
     cmd.w |= parity(cmd.w)<<15; //calculate even parity for
 
     pin_clear(nCS1);
-    spi_transfer(&spi1, cmd.b[1]);
-    spi_transfer(&spi1, cmd.b[0]);
+    spi_transfer(&spi1, cmd.b[1]); //MSB
+    spi_transfer(&spi1, cmd.b[0]); //LSB
     pin_set(nCS1);
 
     pin_clear(nCS1);
-    result.b[1] = spi_transfer(&spi1, 0);
-    result.b[0] = spi_transfer(&spi1, 0);
+    result.b[1] = spi_transfer(&spi1, 0); //MSB
+    result.b[0] = spi_transfer(&spi1, 0); //LSB
     pin_set(nCS1);
     return result;
 }
@@ -72,8 +72,8 @@ void VendorRequests(void) {
         //     BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         //     break;
         case ANG_READ:
-            angle = enc_readReg(0x3FFF);
-            led_toggle(&led1);
+            angle = enc_readReg(0x3FFF); //includes code to read angle (from datasheet)
+            led_toggle(&led1);          // to test if code was working
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2 
@@ -123,7 +123,7 @@ int16_t main(void) {
     init_oc();
     init_spi();
 
-    MOSI = &D[0];
+    MOSI = &D[0]; // set all pins
     MISO = &D[1];
     SCK = &D[2];
     nCS1 = &D[3];
@@ -134,7 +134,6 @@ int16_t main(void) {
     // oc_pwm(&oc1, &D[13], NULL, 10e3, 0x8000);
     oc_pwm(&oc1, &D[5], NULL, 10e3, 0x8000);
     oc_pwm(&oc2, &D[6], NULL, 10e3, 0x8000);
-    // spi_open(&spi1, ENC_MISO, ENC_MOSI, ENC_SCK, 2e6, 1);
     spi_open(&spi1, MISO, MOSI, SCK, 2e6, 1);
     
     InitUSB();                              // initialize the USB registers and serial interface engine
