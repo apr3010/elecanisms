@@ -15,9 +15,7 @@
 #define MOTOR_OFF   4
 #define MOTOR_REV   5
 #define ANG_READ    6
-#define SPRING      7
-#define WALL        8
-#define DAMPER      9
+#define WALL        7
 
 _PIN* nCS1;
 _PIN* nCS2;
@@ -78,7 +76,7 @@ void VendorRequests(void) {
         //     BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
         //     BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         //     break;
-        case SPRING:
+        case WALL:
             vout.w = pin_read(Vout);
             // cur = (Vout - 0.5*vdd)/10*res;  // equation to calculate current
             BD[EP0IN].address[0] = vout.b[0];
@@ -86,13 +84,6 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 0 
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
-        case DAMPER:
-            vout.w = pin_read(Vout);
-            // cur = (Vout - 0.5*vdd)/10*res;  // equation to calculate current
-            BD[EP0IN].address[0] = vout.b[0];
-            BD[EP0IN].address[1] = vout.b[1];
-            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 0 
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         case ANG_READ:
             angle = enc_readReg(0x3FFF); //includes code to read angle (from datasheet)
             // led_toggle(&led1);          // test if code works
