@@ -15,13 +15,16 @@
 #define MOTOR_OFF   4
 #define MOTOR_REV   5
 #define ANG_READ    6
+#define SPRING      7
+#define WALL        8
+#define DAMPER      9
 
-_PIN*nCS1;
-_PIN*nCS2;
-_PIN*MOSI;
-_PIN*MISO;
-_PIN*SCK;
-
+_PIN* nCS1;
+_PIN* nCS2;
+_PIN* MOSI;
+_PIN* MISO;
+_PIN* SCK;
+_PIN* Vout;
 // uint16_t oc1;
 
 //void ClassRequests(void) {
@@ -46,11 +49,15 @@ WORD enc_readReg(uint16_t address) {
     result.b[1] = spi_transfer(&spi1, 0); //MSB
     result.b[0] = spi_transfer(&spi1, 0); //LSB
     pin_set(nCS1);
+    result.b[1]&=0x3F;
     return result;
 }
 
 void VendorRequests(void) {
-    WORD temp, angle;
+    WORD temp, angle, vout;
+    // float cur, vdd, res;
+    // vdd = 3.3;
+    // res = 75*10e-3;
 
     switch (USB_setup.bRequest) {
         case MOTOR_ON:
@@ -71,9 +78,24 @@ void VendorRequests(void) {
         //     BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
         //     BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         //     break;
+        case SPRING:
+            vout.w = pin_read(Vout);
+            // cur = (Vout - 0.5*vdd)/10*res;  // equation to calculate current
+            BD[EP0IN].address[0] = vout.b[0];
+            BD[EP0IN].address[1] = vout.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 0 
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case DAMPER:
+            vout.w = pin_read(Vout);
+            // cur = (Vout - 0.5*vdd)/10*res;  // equation to calculate current
+            BD[EP0IN].address[0] = vout.b[0];
+            BD[EP0IN].address[1] = vout.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 0 
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         case ANG_READ:
             angle = enc_readReg(0x3FFF); //includes code to read angle (from datasheet)
-            led_toggle(&led1);          // to test if code was working
+            // led_toggle(&led1);          // test if code works
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2 
@@ -127,13 +149,15 @@ int16_t main(void) {
     MISO = &D[1];
     SCK = &D[2];
     nCS1 = &D[3];
+    Vout = &A[1];
 
     pin_digitalOut(nCS1);
+    pin_analogIn(Vout);
     // pin_set(nCS1);
     // nCS2 = &D[4];
     // oc_pwm(&oc1, &D[13], NULL, 10e3, 0x8000);
-    oc_pwm(&oc1, &D[5], NULL, 10e3, 0x8000);
-    oc_pwm(&oc2, &D[6], NULL, 10e3, 0x8000);
+    oc_pwm(&oc1, &D[5], NULL, 20e3, 0x8000);
+    oc_pwm(&oc2, &D[6], NULL, 20e3, 0x8000);
     spi_open(&spi1, MISO, MOSI, SCK, 2e6, 1);
     
     InitUSB();                              // initialize the USB registers and serial interface engine
