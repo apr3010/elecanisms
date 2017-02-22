@@ -150,35 +150,35 @@ class blinkusb:
         except usb.core.USBError:
             print "Could not send DAMPER vendor request."
         else:
-            # while True:
-            tor_real = self.tor_read()
-            tor_ideal = 1.0e-4 # max torque
-            # part = tor_real/tor_ideal
-            diff = tor_ideal - tor_real
-            val = (tor_ideal/tor_real)
-            if (tor_real < 3e-4):
-                print tor_real
-                self.motor_rev()
-                self.set_duty(val)
-                self.motor_off()
-            # return tor_real
-            # cur_pos = self.ang_read()
-            # time.sleep(0.05)
-            # next_pos = self.ang_read()
-            # diff_pos = cur_pos - next_pos
-            # if (diff < 0):
-            #     print "minus"
-            #     self.motor_on()
-            #     self.set_duty(tor_real)
-            #     self.motor_off()
-            elif (tor_real > 3e-4):
-                print "off"
-                self.motor_off()
-            return tor_real
-            # else:
-            #     self.motor_off()
-                # if self.heardEnter():
-                #     break
+            while True:
+                tor_real = self.tor_read()
+                tor_ideal = 1.0e-4 # max torque
+                # part = tor_real/tor_ideal
+                diff = tor_ideal - tor_real
+                val = (tor_ideal/tor_real)
+                if (tor_real < 3e-4):
+                    print tor_real
+                    self.motor_rev()
+                    self.set_duty(val)
+                    self.motor_off()
+                # return tor_real
+                # cur_pos = self.ang_read()
+                # time.sleep(0.05)
+                # next_pos = self.ang_read()
+                # diff_pos = cur_pos - next_pos
+                # if (diff < 0):
+                #     print "minus"
+                #     self.motor_on()
+                #     self.set_duty(tor_real)
+                #     self.motor_off()
+                elif (tor_real > 3e-4):
+                    print "off"
+                    self.motor_off()
+                return tor_real
+                # else:
+                #     self.motor_off()
+                if self.heardEnter():
+                    break
     
     def texture(self):
         try:
