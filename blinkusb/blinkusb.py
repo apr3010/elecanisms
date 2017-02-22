@@ -155,10 +155,11 @@ class blinkusb:
             tor_ideal = 1.0e-4 # max torque
             # part = tor_real/tor_ideal
             diff = tor_ideal - tor_real
-            if (diff > 5e-5):
-                print "minus"
-                self.motor_on()
-                self.set_duty(tor_real*5)
+            val = (tor_ideal/tor_real)
+            if (tor_real < 3e-4):
+                print tor_real
+                self.motor_rev()
+                self.set_duty(val)
                 self.motor_off()
             # return tor_real
             # cur_pos = self.ang_read()
@@ -170,11 +171,10 @@ class blinkusb:
             #     self.motor_on()
             #     self.set_duty(tor_real)
             #     self.motor_off()
-            elif (diff < 3e-5):
-                print "plus"
-                self.motor_rev()
-                self.set_duty(tor_real*5)
+            elif (tor_real > 3e-4):
+                print "off"
                 self.motor_off()
+            return tor_real
             # else:
             #     self.motor_off()
                 # if self.heardEnter():
@@ -226,7 +226,7 @@ if __name__ == '__main__':
         action.damper()
 # #         self.motor_off()
         result.append(action.ang_read())
-        t_res.append(action.tor_read())
+        t_res.append(action.damper())
         time.sleep(0.1)     
 #         # self.spring()
     print result
