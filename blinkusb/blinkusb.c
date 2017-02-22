@@ -15,7 +15,7 @@
 #define MOTOR_OFF   4
 #define MOTOR_REV   5
 #define ANG_READ    6
-#define WALL        7
+#define TOR_READ    7
 
 _PIN* nCS1;
 _PIN* nCS2;
@@ -76,7 +76,7 @@ void VendorRequests(void) {
         //     BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
         //     BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         //     break;
-        case WALL:
+        case TOR_READ:
             vout.w = pin_read(Vout);
             // cur = (Vout - 0.5*vdd)/10*res;  // equation to calculate current
             BD[EP0IN].address[0] = vout.b[0];
